@@ -1,0 +1,14 @@
+[package]
+name = "rust-telebot"
+version = "0.1.0"
+authors = ["Alexander Serebrov <serebrov.alexandr@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+futures = "0.3"
+tokio = { version = "0.2", features = ["full"] }
+telegram-bot = { git = 'https://github.com/telegram-rs/telegram-bot' }
+goji = "0.2"
+env_logger = "0.7.1"
