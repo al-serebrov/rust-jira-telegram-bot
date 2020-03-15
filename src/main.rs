@@ -30,23 +30,27 @@ async fn main() -> Result<(), Error> {
             if let UpdateKind::Message(message) = update.kind {
                 if let MessageKind::Text { ref data, .. } = message.kind {
                     println!("<{}>: {}", &message.from.first_name, data);
-                    let query = env::args().nth(1).unwrap_or("project = BV AND summary ~ amazon AND status = New AND assignee in (EMPTY) ORDER BY priority ASC".to_owned());
+                    let query = env::var("JIRA_QUERY").unwrap_or("assignee=doug".to_owned());
                     match jira.search().iter(query, &Default::default()) {
                         Ok(results) => {
                             for issue in results {
+                                let base_url = "https://scrapinghub.atlassian.net/browse/";
                                 api.send(message.text_reply(format!(
-                                    "{} {} ({}): priority {}",
+                                    "[{}] [{}]({}{}) {} ({})",
+                                    issue.issue_type().map(|value| value.name).unwrap_or("???".to_owned()),
+                                    issue.key,
+                                    base_url,
                                     issue.key,
                                     issue.summary().unwrap_or("???".to_owned()),
                                     issue
                                         .status()
                                         .map(|value| value.name,)
                                         .unwrap_or("???".to_owned(),),
-                                    issue
-                                        .priority()
-                                        .map(|value| value.id,)
-                                        .unwrap_or("???".to_owned(),),
-                                ))).await?;
+                                    // always ??? - why?
+                                    //issue.priority().map(|value| value.name).unwrap_or("???".to_owned()),
+                                )).parse_mode(ParseMode::Markdown).disable_preview()).await?;
+                                //debugging
+                                //println!("{:#?}", issue);
                             }
                         }
                         Err(err) => panic!("{:#?}", err),
@@ -57,8 +61,3 @@ async fn main() -> Result<(), Error> {
     }
     Ok(())
 }
-                //api.send(message.text_reply(format!(
-                    //"Hi, {}! You just wrote '{}'",
-                    //&message.from.first_name, data
-                //)))
-                //.await?;
